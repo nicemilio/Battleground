@@ -1,0 +1,76 @@
+﻿<Window x:Class="Battleground.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Battleground"
+        mc:Ignorable="d"
+        Title="Schiffe versenken" Height="600" Width="1000">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="66"/>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="66"/>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="66"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50"/>
+            <RowDefinition Height="390"/>
+            <RowDefinition Height="80"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <DataGrid Name="myDataGrid" 
+                  Grid.Column="1"
+                  Grid.Row="1"
+                  RowHeight="35"
+                  FontSize="15"
+                  ColumnWidth="35"
+                  CanUserAddRows="false"
+                  IsReadOnly="true"
+                  CanUserSortColumns="false"
+                  CanUserReorderColumns="false"
+                  CanUserResizeColumns="false">
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow">
+                    <Setter Property="IsHitTestVisible" Value="False"/>
+                </Style>
+            </DataGrid.RowStyle>
+        </DataGrid>
+        <DataGrid Name="enemyDataGrid"
+                  Grid.Column="3"
+                  Grid.Row="1"
+                  RowHeight="35"
+                  ColumnWidth="35"
+                  FontSize="15"
+                  CanUserAddRows="false"
+                  IsReadOnly="true"
+                  CanUserSortColumns="false"
+                  CanUserReorderColumns="false"
+                  CanUserResizeColumns="true">
+            <DataGrid.ItemContainerStyle>
+                <Style TargetType="DataGridRow">
+                    <EventSetter Event="MouseDoubleClick" Handler="Row_DoubleClick"/>
+                </Style>
+            </DataGrid.ItemContainerStyle>
+            <DataGrid.CellStyle>
+                <Style TargetType="{x:Type DataGridCell}">
+                    <Style.Triggers>
+                        <Trigger Property="DataGridCell.IsSelected" Value="True">
+                            <Setter Property="BorderBrush" Value="Transparent"/>
+                            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+                            <Setter Property="Background" Value="Transparent"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.CellStyle>
+        </DataGrid>
+        <Button Grid.Column="3" Content="Connect" HorizontalAlignment="Left" Margin="310,0,0,0" VerticalAlignment="Center" Height="18" Width="81" Click="Button_Connect"/>
+        <TextBox Grid.Column="3" HorizontalAlignment="Left" Margin="207,0,0,0" TextWrapping="Wrap" Text="192.168.178.1" VerticalAlignment="Center" Width="98"/>
+        <Ellipse Grid.Column="4" Name="status" Height="14" Stroke="Black" VerticalAlignment="Top" Width="15" Fill="{Binding Path=BoundNumber}" Margin="10,20,29,0"/>
+        <ComboBox Grid.Column="1" HorizontalAlignment="Left" Grid.Row="2" VerticalAlignment="Center" Width="141" Height="32" Name="Selection"/>
+        <Button Grid.Column="1" Content="Shoot" HorizontalAlignment="Left" Grid.Row="2" VerticalAlignment="Center" Height="32" Width="46" Margin="183,0,0,0" Click="Button_Shoot"/>
+        <TextBlock Grid.Column="1" HorizontalAlignment="Center" TextWrapping="Wrap" Text="{Binding Path=BoundText}" VerticalAlignment="Center" Height="28" Width="347"/>
+
+    </Grid>
+</Window>
