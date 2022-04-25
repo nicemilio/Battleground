@@ -29,12 +29,10 @@ namespace Battleground {
             InitializeComponent();
             DataTable dt = new DataTable();
             DataTable secondDt = new DataTable();
-            board myBoard = new board(10, 10, true);
-            board enemyBoard = new board(10, 10, true);
+            PlayerClient player = new PlayerClient();
             myDataGrid.HorizontalContentAlignment = HorizontalAlignment.Center;
-            UpdateDataGrid (myDataGrid, myBoard);
-            UpdateDataGrid (enemyDataGrid, enemyBoard);
-            Selection.Items.Add(555);
+            UpdateDataGrid (myDataGrid, player.myBoard );
+            UpdateDataGrid (enemyDataGrid, player.enemyBoard);
             BoundNumber = "Red";
         }
 

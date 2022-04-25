@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace Battleground
 {
@@ -18,8 +19,8 @@ namespace Battleground
         protected const string RETRY = "Bad input, shoot again";
         protected const string FIRST = "first!";
         protected const string SECOND = "second!";
-        protected board myBoard;
-        protected board enemyBoard;
+        public board myBoard { get; set; }
+        public board enemyBoard { get; set; }
         protected TcpClient client;
         protected string mData = "";
         protected bool myTurn = false;
@@ -32,8 +33,9 @@ namespace Battleground
             this.myBoard = new board(10, 10, true);
             this.enemyBoard = new board(10, 10, false);
             this.myTurn = false;
-            Console.WriteLine("Starting client");
-            StartClient(ipString);
+            Output ("Starting client");
+            Output("Press the connect button to connect to a server");
+            //StartClient(ipString);
         }
 
 
@@ -143,6 +145,27 @@ namespace Battleground
             {
                 Console.WriteLine("Your opponent entered bad coordinates, they are trying again");
                 return RETRY;
+            }
+        }
+
+        private void Output (String theMsg)
+        {
+            foreach (Window window in Application.Current.Windows)
+            {
+                if (window.GetType() == typeof(MainWindow))
+                {
+                    String text = (window as MainWindow).Console.Text;
+                    int lines = text.Count(f => f == '\n');
+                    if (lines > 3)
+                    {
+                        String newText = text.Substring(text.IndexOf('\n') + 1);
+                        (window as MainWindow).Console.Text = newText + theMsg + "\r\n";
+                    }
+                    else
+                    {
+                        (window as MainWindow).Console.Text += theMsg + "\r\n" ;
+                    }
+                }
             }
         }
 
