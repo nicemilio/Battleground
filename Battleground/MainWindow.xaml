@@ -47,7 +47,7 @@
                   IsReadOnly="true"
                   CanUserSortColumns="false"
                   CanUserReorderColumns="false"
-                  CanUserResizeColumns="true">
+                  CanUserResizeColumns="false">
             <DataGrid.ItemContainerStyle>
                 <Style TargetType="DataGridRow">
                     <EventSetter Event="MouseDoubleClick" Handler="Row_DoubleClick"/>
@@ -66,7 +66,7 @@
             </DataGrid.CellStyle>
         </DataGrid>
         <Button Grid.Column="3" Content="Connect" HorizontalAlignment="Left" Margin="310,0,0,0" VerticalAlignment="Center" Height="18" Width="81" Click="Button_Connect"/>
-        <TextBox Grid.Column="3" HorizontalAlignment="Left" Margin="207,0,0,0" TextWrapping="Wrap" Text="127.0.0.1" VerticalAlignment="Center" Width="98"/>
+        <TextBox Grid.Column="3" HorizontalAlignment="Left" Margin="207,0,0,0" TextWrapping="Wrap" Text="127.0.0.1" VerticalAlignment="Center" Width="98" Name="IPAddress"/>
         <Ellipse Grid.Column="4" Name="status" Height="14" Stroke="Black" VerticalAlignment="Top" Width="15" Fill="{Binding Path=BoundNumber}" Margin="10,20,29,0"/>
         <TextBlock Grid.Column="1" HorizontalAlignment="Center" TextWrapping="Wrap" Text="{Binding Path=BoundText}" VerticalAlignment="Center" Height="28" Width="347"/>
         <TextBlock Grid.Column="3" HorizontalAlignment="Left" Margin="0,34,0,0" TextWrapping="Wrap" Text="Gegnerische Schiffe" VerticalAlignment="Top"/>

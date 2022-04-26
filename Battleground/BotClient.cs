@@ -15,7 +15,7 @@ namespace Battleground
         private string previousResult = "";
         private Random rnd = new Random();
 
-        protected override async void StartClient(string ipString = "127.0.0.1")
+        void StartClient(string ipString = "127.0.0.1")
         {
             //"127.0.0.1"
             IPAddress ip = IPAddress.Parse(ipString);
@@ -34,10 +34,8 @@ namespace Battleground
             // if (i > 9) exit; //TODO program exits when the connection doesnt work
 
             Thread threadReceiveData = new Thread(ReceiveData);
-            Thread threadMyTurn = new Thread(Shoot);
             threadReceiveData.Start();
             Thread.Sleep(100);
-            threadMyTurn.Start();
         }
         protected override void ReceiveData()
         {
@@ -73,7 +71,7 @@ namespace Battleground
         }
 
 
-        protected override void Shoot()
+        public override bool Shoot (String something)
         { //TODO Need a thread to be constantly checking if its your turn(?)
             while (true)
             {
@@ -171,6 +169,7 @@ namespace Battleground
                     SendData(rowColToCoordinate(nextRow, nextCol));
                     this.myTurn = false;
                 }
+                return true;
             }
         }
 

@@ -21,15 +21,17 @@ namespace Battleground {
     public partial class MainWindow : INotifyPropertyChanged
     {
         char[] coord = { '0', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j' };
+        readonly string[] bad_input = { "01", "02", "03", "04", "05", "06", "07", "08", "09", "010" };
         int nbColumns = 11;
         int nbRows = 10;
+        PlayerClient player;
         public MainWindow()
         {
             DataContext = this;
             InitializeComponent();
             DataTable dt = new DataTable();
             DataTable secondDt = new DataTable();
-            PlayerClient player = new PlayerClient();
+            player = new PlayerClient();
             myDataGrid.HorizontalContentAlignment = HorizontalAlignment.Center;
             UpdateDataGrid (myDataGrid, player.myBoard );
             UpdateDataGrid (enemyDataGrid, player.enemyBoard);
@@ -66,12 +68,12 @@ namespace Battleground {
 
         private void Button_Connect(object sender, RoutedEventArgs e)
         {
-            BoundNumber = "Green";
-        }
-
-        private void Button_Shoot(object sender, RoutedEventArgs e)
-        {
-            BoundNumber = "Green";
+            if (player.StartClient (IPAddress.Text))
+                BoundNumber = "Green";
+            else
+            {
+                BoundNumber = "Red";
+            }
         }
 
         private void Row_DoubleClick(object sender, MouseButtonEventArgs e)
@@ -81,8 +83,13 @@ namespace Battleground {
             DataGridCellInfo cellInfo = enemyDataGrid.CurrentCell;
             DataGridColumn column = cellInfo.Column;
             var docid = ro["0"];
-            BoundText = column.Header + docid.ToString();
-            BoundNumber = "Black";
+            String coords = column.Header + docid.ToString();
+            if (! bad_input.Any(coords.Contains))
+            {
+                player.Shoot (coords);
+                UpdateDataGrid(myDataGrid, player.myBoard);
+                UpdateDataGrid(enemyDataGrid, player.enemyBoard);
+            }
         }
 
         private void UpdateDataGrid (DataGrid theGrid, board theData)

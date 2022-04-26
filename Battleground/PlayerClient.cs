@@ -27,19 +27,19 @@ namespace Battleground
         protected int[] lastShot = new int[2]; //{theRow, theCol}
 
 
-        public PlayerClient(string ipString = "127.0.0.1")
+        public PlayerClient()
         {
             this.client = new TcpClient();
             this.myBoard = new board(10, 10, true);
             this.enemyBoard = new board(10, 10, false);
             this.myTurn = false;
             Output ("Starting client");
-            Output("Press the connect button to connect to a server");
+            Output ("Press the connect button to connect to a server");
             //StartClient(ipString);
         }
 
 
-        protected virtual void StartClient(string ipString)
+        public virtual bool StartClient(string ipString)
         {
             //"127.0.0.1"
             IPAddress ip = IPAddress.Parse(ipString);
@@ -50,18 +50,15 @@ namespace Battleground
                 try { this.client.Connect(ip, port); keepTrying = "n"; }
                 catch (SocketException e)
                 {
-                    Console.WriteLine("Connection refused. Want to try again? y/n");
-                    string? readLine = Console.ReadLine();
-                    keepTrying = String.IsNullOrEmpty(readLine) ? "y" : readLine;
+                    Output ("Connection refused. Please try again");
+                    return false;
                 }
             }
-            // if (!keepTrying) exit;
 
-            Console.WriteLine("Application connected to server!");
+            Output ("Application connected to server!");
             Thread threadReceiveData = new Thread(ReceiveData);
-            Thread threadMyTurn = new Thread(Shoot);
             threadReceiveData.Start();
-            threadMyTurn.Start();
+            return true;
         }
         protected virtual void ReceiveData()
         {
@@ -92,31 +89,25 @@ namespace Battleground
                     if (shotResponseArray.Contains(mData))
                         this.enemyBoard.AssignChar(this.lastShot[0], this.lastShot[1], mData == MISS ? 'o' : 'x');
 
-                    refreshConsole(mData);
-
                 }
             }
         }
 
 
-        protected virtual void Shoot()
-        { //TODO Need a thread to be constantly checking if its your turn(?)
+        virtual public bool Shoot(string theCoords)
+        {
             while (true)
             {
-                //Console.WriteLine("Checking myTurn...");
                 if (this.myTurn)
                 {
-                    //Take the shot
-
-                    Console.WriteLine("Your turn!");
-
-                    string readLine = Console.ReadLine();
-                    if (readLine == "" || readLine == null) return;
-                    SendData(readLine);
-                    this.lastShot[0] = coordinateToRowCol(readLine.Substring(0, 1));
-                    this.lastShot[1] = coordinateToRowCol(readLine.Substring(1, 2));
+                    SendData(theCoords);
+                    this.lastShot[0] = coordinateToRowCol(theCoords.Substring(0, 1));
+                    this.lastShot[1] = coordinateToRowCol(theCoords.Substring(1, 2));
                     this.myTurn = false;
+                    return true;
                 }
+                else
+                    return false;
             }
         }
         protected void SendData(String theMessage)
@@ -143,12 +134,12 @@ namespace Battleground
             }
             catch (Exception e)
             {
-                Console.WriteLine("Your opponent entered bad coordinates, they are trying again");
+                Output ("Your opponent entered bad coordinates, they are trying again");
                 return RETRY;
             }
         }
 
-        private void Output (String theMsg)
+        public void Output (String theMsg)
         {
             foreach (Window window in Application.Current.Windows)
             {
@@ -171,12 +162,7 @@ namespace Battleground
 
         private void refreshConsole(String message = "")
         {
-            Console.Clear();
-            Console.WriteLine("Your Board");
-            this.myBoard.PrintBoard();
-            Console.WriteLine("Enemy Board");
-            this.enemyBoard.PrintBoard();
-            Console.WriteLine(message);
+            Output (message);
         }
         //Helper method to conver battleshipe coordinates (A10) to our integers
         protected int coordinateToRowCol(string co)
