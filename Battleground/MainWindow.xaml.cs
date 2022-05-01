@@ -18,13 +18,15 @@ using System.Data;
 using System.Threading;
 
 namespace Battleground { 
-    public partial class MainWindow : INotifyPropertyChanged
+    public partial class MainWindow : INotifyPropertyChanged, IObserver
     {
         char[] coord = { '0', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j' };
         readonly string[] bad_input = { "01", "02", "03", "04", "05", "06", "07", "08", "09", "010" };
         int nbColumns = 11;
         int nbRows = 10;
         PlayerClient player;
+        BotClient bot;
+        delegate void Update_Fields_callback();
         public MainWindow()
         {
             DataContext = this;
@@ -32,6 +34,8 @@ namespace Battleground {
             DataTable dt = new DataTable();
             DataTable secondDt = new DataTable();
             player = new PlayerClient();
+            bot = new BotClient();
+            player.Register(this);
             myDataGrid.HorizontalContentAlignment = HorizontalAlignment.Center;
             UpdateDataGrid (myDataGrid, player.myBoard );
             UpdateDataGrid (enemyDataGrid, player.enemyBoard);
@@ -68,11 +72,18 @@ namespace Battleground {
 
         private void Button_Connect(object sender, RoutedEventArgs e)
         {
-            if (player.StartClient (IPAddress.Text))
-                BoundNumber = "Green";
+            if (IPAddress.Text == "Bot" || IPAddress.Text == "bot")
+            {
+                bot.StartClient("127.0.0.1");
+            }
             else
             {
-                BoundNumber = "Red";
+                if (player.StartClient(IPAddress.Text))
+                    BoundNumber = "Green";
+                else
+                {
+                    BoundNumber = "Red";
+                }
             }
         }
 
@@ -83,7 +94,8 @@ namespace Battleground {
             DataGridCellInfo cellInfo = enemyDataGrid.CurrentCell;
             DataGridColumn column = cellInfo.Column;
             var docid = ro["0"];
-            String coords = column.Header + docid.ToString();
+            String row = docid.ToString();
+            String coords = column.Header + row;
             if (! bad_input.Any(coords.Contains))
             {
                 player.Shoot (coords);
@@ -107,12 +119,25 @@ namespace Battleground {
                 dr[0] = row + 1;
                 for (int col = 1; col < nbColumns; col++)
                 {
-                    dr[col] = theBoard[row, col - 1];
+                    dr[col] = theBoard[col - 1, row];
                 }
                 dt.Rows.Add(dr);
             }
-            theGrid.Items.Clear();
+            theGrid.ItemsSource = null;
             theGrid.ItemsSource = dt.DefaultView;
+        }
+
+        public void BoardChanged(bool myTurn)
+        {
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.Invoke(() => BoardChanged(myTurn));
+            } else
+            {
+                UpdateDataGrid(myDataGrid, player.myBoard);
+                UpdateDataGrid(enemyDataGrid, player.enemyBoard);
+            }
+            
         }
     }
 }

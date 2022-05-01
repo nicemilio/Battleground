@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Battleground"
         mc:Ignorable="d"
-        Title="Schiffe versenken" Height="600" Width="1000">
+        Title="Schiffe versenken" Height="600" Width="1000"
+        Icon="C:\Users\nicth\source\repos\Battleground\Battleground\IconPNG.ico">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="66"/>

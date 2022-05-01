@@ -7,10 +7,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 
 namespace Battleground
 {
-    internal class PlayerClient
+    internal class PlayerClient : ISubject
     {
         protected const string MISS = "miss!";
         protected const string HIT = "hit!";
@@ -23,8 +24,10 @@ namespace Battleground
         public board enemyBoard { get; set; }
         protected TcpClient client;
         protected string mData = "";
-        protected bool myTurn = false;
+        protected Boolean myTurn = false;
         protected int[] lastShot = new int[2]; //{theRow, theCol}
+        protected List<IObserver> _observers = new List<IObserver>();
+        delegate void Update_TextBox_callback (String theMsg);
 
 
         public PlayerClient()
@@ -32,12 +35,25 @@ namespace Battleground
             this.client = new TcpClient();
             this.myBoard = new board(10, 10, true);
             this.enemyBoard = new board(10, 10, false);
-            this.myTurn = false;
             Output ("Starting client");
             Output ("Press the connect button to connect to a server");
             //StartClient(ipString);
         }
 
+        public void Register(IObserver observer)
+        {
+            _observers.Add(observer);
+        }
+
+        public void Unregister(IObserver observer)
+        {
+            _observers.Remove(observer);
+        }
+
+        public void Notify()
+        {
+            _observers.ForEach(o => o.BoardChanged(this.myTurn));
+        }
 
         public virtual bool StartClient(string ipString)
         {
@@ -65,50 +81,59 @@ namespace Battleground
             NetworkStream ns = this.client.GetStream();
             byte[] receivedBytes = new byte[1024];
             int byte_count;
+            String[] myTurnArray = { FIRST, HIT, DESTROY, RETRY };
+            String[] shotResponseArray = { MISS, HIT, DESTROY };
             while (true)
             {
-
-
                 while ((byte_count = ns.Read(receivedBytes, 0, receivedBytes.Length)) > 0)
                 {
                     mData = Encoding.ASCII.GetString(receivedBytes, 0, byte_count);
-                    mData = mData.Substring(0, mData.Length - 1);
+                    mData = mData.Substring(0, mData.Length - 2);
                     this.myTurn = false;
-                    if (mData.Length == 3)
+                    if (mData.Length <= 3)
                     {
                         String response = checkEnemyShot(mData);
+                        Notify();
+                        // MessageBox.Show(response);
                         SendData(response);
-                        this.myTurn = (response != HIT && response != DESTROY);
-                        if (this.myTurn) refreshConsole("Your opponent shot (" + mData + ") and missed!");
-                        else refreshConsole("Your opponent hit (" + mData + ") and is taking another turn");
+                        if (response == GAME)
+                        {
+                            //TODO Offer rematch
+                        }
+                        else if (myTurnArray.Contains(response))
+                        {
+                        }
+                        else
+                        {
+                            this.myTurn = true;
+                        }
                         break;
+
+                        
                     }
-                    String[] myTurnArray = { FIRST, HIT, DESTROY, RETRY };
-                    this.myTurn = myTurnArray.Contains(mData);
-                    String[] shotResponseArray = { MISS, HIT, DESTROY };
                     if (shotResponseArray.Contains(mData))
                         this.enemyBoard.AssignChar(this.lastShot[0], this.lastShot[1], mData == MISS ? 'o' : 'x');
-
+                    if (mData == DESTROY) 
+                        this.enemyBoard.fillMisses(this.lastShot[0], this.lastShot[1]);
+                    if (myTurnArray.Contains(mData)) 
+                        this.myTurn = true;
+                    Notify();
                 }
             }
         }
 
 
-        virtual public bool Shoot(string theCoords)
+        virtual public void Shoot(string theCoords)
         {
-            while (true)
+            Output(myTurn.ToString ());
+            if (this.myTurn)
             {
-                if (this.myTurn)
-                {
-                    SendData(theCoords);
-                    this.lastShot[0] = coordinateToRowCol(theCoords.Substring(0, 1));
-                    this.lastShot[1] = coordinateToRowCol(theCoords.Substring(1, 2));
-                    this.myTurn = false;
-                    return true;
-                }
-                else
-                    return false;
+                SendData(theCoords);
+                this.lastShot[0] = coordinateToRowCol(theCoords.Substring(0, 1));
+                this.lastShot[1] = coordinateToRowCol(theCoords.Substring(1, theCoords.Length - 1));
+                this.myTurn = false;
             }
+            
         }
         protected void SendData(String theMessage)
         {
@@ -119,10 +144,11 @@ namespace Battleground
 
         protected virtual string checkEnemyShot(string shot)
         {
+            //MessageBox.Show(shot);
             try
             {
-                int theRow = coordinateToRowCol(mData.Substring(0, 1)); //First character in the string
-                int theCol = coordinateToRowCol(mData.Substring(1, 2)); //Second and Thid characters in the string
+                int theRow = coordinateToRowCol(shot.Substring(0, 1)); //First character in the string
+                int theCol = coordinateToRowCol(shot.Substring(1, shot.Length - 1)); //Second and Thid characters in the string
                 switch (this.myBoard.Shoot(theRow, theCol))
                 {
                     case ('o'): return MISS;
@@ -154,46 +180,44 @@ namespace Battleground
                     }
                     else
                     {
-                        (window as MainWindow).Console.Text += theMsg + "\r\n" ;
+                        (window as MainWindow).Console.Text += theMsg + "\r\n";
                     }
+                    
                 }
             }
         }
 
-        private void refreshConsole(String message = "")
-        {
-            Output (message);
-        }
-        //Helper method to conver battleshipe coordinates (A10) to our integers
+
+        //Helper method to convert battleshipe coordinates (A10) to our integers
         protected int coordinateToRowCol(string co)
         {
             switch (co)
             {
-                case ("01"):
+                case ("1"):
                 case ("A"):
                 case ("a"): return 0;
-                case ("02"):
+                case ("2"):
                 case ("B"):
                 case ("b"): return 1;
-                case ("03"):
+                case ("3"):
                 case ("C"):
                 case ("c"): return 2;
-                case ("04"):
+                case ("4"):
                 case ("D"):
                 case ("d"): return 3;
-                case ("05"):
+                case ("5"):
                 case ("E"):
                 case ("e"): return 4;
-                case ("06"):
+                case ("6"):
                 case ("F"):
                 case ("f"): return 5;
-                case ("07"):
+                case ("7"):
                 case ("G"):
                 case ("g"): return 6;
-                case ("08"):
+                case ("8"):
                 case ("H"):
                 case ("h"): return 7;
-                case ("09"):
+                case ("9"):
                 case ("I"):
                 case ("i"): return 8;
                 case ("10"):
@@ -202,5 +226,7 @@ namespace Battleground
                 default: throw new Exception("Not a valid coordinate");
             }
         }
+
+       
     }
 }
